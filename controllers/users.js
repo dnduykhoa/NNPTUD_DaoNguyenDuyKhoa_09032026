@@ -1,4 +1,6 @@
 let userModel = require('../schemas/users')
+let bcrypt = require('bcrypt');
+
 module.exports = {
     CreateAnUser: async function (username, password, email, role,
         avatarUrl, fullName, status, loginCount
@@ -28,5 +30,24 @@ module.exports = {
             _id: id,
             isDeleted:false
         }).populate('role')
+    },
+    ChangePassword: async function (userId, oldPassword, newPassword) {
+        let user = await userModel.findOne({ _id: userId, isDeleted: false });
+        if (!user) {
+            throw new Error("User not found");
+        }
+        
+        // Kiểm tra mật khẩu cũ
+        let isValidPassword = bcrypt.compareSync(oldPassword, user.password);
+        if (!isValidPassword) {
+            throw new Error("Old password is incorrect");
+        }
+        
+        // Cập nhật mật khẩu mới
+        let salt = bcrypt.genSaltSync(10);
+        user.password = bcrypt.hashSync(newPassword, salt);
+        await user.save();
+        
+        return user;
     }
 }

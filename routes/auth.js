@@ -50,6 +50,27 @@ router.post('/logout', checkLogin, function (req, res, next) {
     res.send("da logout ")
 })
 
+router.post('/change-password', checkLogin, async function (req, res, next) {
+    try {
+        let userId = req.userId;
+        let { oldPassword, newPassword } = req.body;
+        
+        if (!oldPassword || !newPassword) {
+            return res.status(400).send({ message: "Old password and new password are required" });
+        }
+        
+        if (newPassword.length < 6) {
+            return res.status(400).send({ message: "New password must be at least 6 characters" });
+        }
+        
+        await userController.ChangePassword(userId, oldPassword, newPassword);
+        
+        res.send({ message: "Password changed successfully" });
+    } catch (error) {
+        res.status(400).send({ message: error.message });
+    }
+})
+
 
 
 module.exports = router;
